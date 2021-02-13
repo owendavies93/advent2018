@@ -15,7 +15,7 @@ class Day15Spec extends AnyFunSuite {
         val graph = new WeightedUndirectedGraph(Day15.constructGraph(map))
 
         val testElf = elves.head
-        val all = goblins ++ elves
+        val all = (goblins ++ elves).toArray
 
         assert(!testElf.nextToTarget(all, map))
 
@@ -29,7 +29,7 @@ class Day15Spec extends AnyFunSuite {
         val graph = new WeightedUndirectedGraph(Day15.constructGraph(map))
 
         val testElf = elves.head
-        val all = goblins ++ elves
+        val all = (goblins ++ elves).toArray
 
         assert(!testElf.nextToTarget(all, map))
 
@@ -44,37 +44,29 @@ class Day15Spec extends AnyFunSuite {
 
         val all = readingOrder(goblins ++ elves)
 
-        Day15.printMap(map, all)
+        (0 until all.size).foreach(i => all(i) = all(i).move(all, map, graph))
 
-        var next = readingOrder(all.map(_.move(all, map, graph)))
+        var elf = all.filter(_.side == Day15.Type.Elf).head
 
-        var elf = next.filter(_.side == Day15.Type.Elf).head
-
-        Day15.printMap(map, next)
-
-        assert(elf.nextToTarget(next, map))
+        assert(elf.nextToTarget(all, map))
 
         assertResult(Day15.Point(4,3)) {
             elf.pos
         }
 
-        next = readingOrder(next.map(_.move(next, map, graph)))
+        (0 until all.size).foreach(i => all(i) = all(i).move(all, map, graph))
 
-        Day15.printMap(map, next)
+        elf = all.filter(_.side == Day15.Type.Elf).head
 
-        elf = next.filter(_.side == Day15.Type.Elf).head
-
-        assert(elf.nextToTarget(next, map))
+        assert(elf.nextToTarget(all, map))
 
         assertResult(Day15.Point(4,3)) {
             elf.pos
         }
 
-        next = readingOrder(next.map(_.move(next, map, graph)))
-
-        Day15.printMap(map, next)
+        (0 until all.size).foreach(i => all(i) = all(i).move(all, map, graph))
     }
 
     def readingOrder(l: List[Day15.Character]) =
-        l.sortBy(ch => (ch.pos.y, ch.pos.x))
+        l.sortBy(ch => (ch.pos.y, ch.pos.x)).toArray
 }

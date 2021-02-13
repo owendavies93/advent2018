@@ -7,6 +7,8 @@ import scalaadventutils.GridUtils
 import scalaadventutils.WeightedUndirectedGraph
 
 import collection.mutable.ArrayBuffer
+import collection.mutable.ListBuffer
+import collection.mutable.Set
 
 object Day15 {
 
@@ -21,17 +23,17 @@ object Day15 {
     }
 
     case class Character(pos: Point, side: Type.Value, hp: Int) {
-        def nextToTarget(allChars: List[Character], g: Grid) =
+        def nextToTarget(allChars: Array[Character], g: Grid) =
             allChars
                 .filter(_.side != side)
                 .filter(t =>
                     g.nonDiagNeighbours(t.pos.x, t.pos.y, false)
                      .filter(p => Point(p._1, p._2) == pos)
-                     .size > 0
-                ).size > 0
+                     .nonEmpty
+                ).nonEmpty
 
         def move
-            ( allChars: List[Character]
+            ( allChars: Array[Character]
             , g: Grid
             , graph: WeightedUndirectedGraph[Point]) = {
 
@@ -41,6 +43,7 @@ object Day15 {
             val candidateLocs = targets.flatMap(t =>
                 g.nonDiagNeighbours(t.pos.x, t.pos.y, false)
                  .filter(p => g.get(p._1, p._2) == true)
+                 .filterNot(p => allLocs.contains(Point(p._1, p._2)))
             ).distinct
 
             if (candidateLocs.isEmpty || nextToTarget(allChars, g)) this
@@ -53,25 +56,66 @@ object Day15 {
                 val usableGraph = allLocs.foldLeft(graph)(
                     (next, loc) => next.removeEdgesTo(loc))
 
-                val validPaths = candidateLocs
-                    .map(l => Dijkstra.shortestPath[Point](
-                        usableGraph, pos, Point(l._1, l._2)))
-                    .filter(p => p.contains(pos))
+                val shortestPathsToCandidates = candidateLocs
+                    .flatMap(l => shortestPathsTo(Point(l._1, l._2), usableGraph))
 
                 /*
                     All edge weights are 1 so we just need the shortest path,
                     not the shortest total weight (or rather, they are
                     equivalent and the former is simpler)
                 */
-                val groupedPaths = validPaths.groupBy(_.size)
+                val groupedPaths  = shortestPathsToCandidates.groupBy(_.size)
                 val shortestPaths = groupedPaths(groupedPaths.keys.min)
 
                 val chosen = shortestPaths
-                    .sortBy(p => (p.last.y, p.last.x))
-                    .head.drop(1).head
+                    .map(_.drop(1).head)
+                    .sortBy(p => (p.y, p.x))
+                    .head
 
                 copy(pos = chosen)
             }
+        }
+
+        def shortestPathsTo
+            ( target: Point
+            , g: WeightedUndirectedGraph[Point])
+            : List[List[Point]] = {
+
+            val shortestPath =
+                Dijkstra.shortestPath[Point](g, pos, target)
+
+            if (!shortestPath.contains(pos)) return List[List[Point]]()
+
+            val shortestPathLength = shortestPath.size
+            val paths = ListBuffer[List[Point]]()
+
+            def dfs
+                ( point: Point
+                , path: ListBuffer[Point]
+                , visited: Set[Point]) {
+
+                if (path.size > shortestPathLength) return
+
+                if (point == target) {
+                    paths += path.toList
+                    return
+                }
+
+                visited += point
+
+                for (p <- g.neighbours(point)) {
+                    if (!visited.contains(p)) {
+                        path += p
+                        dfs(p, path, visited)
+                        path -= p
+                    }
+                }
+
+                visited -= point
+            }
+
+            dfs(pos, ListBuffer[Point](pos), Set[Point]())
+            paths.toList
         }
 
         // TODO: attack
@@ -133,7 +177,7 @@ object Day15 {
         (grid, goblins, elves)
     }
 
-    def printMap(grid: Grid, chars: List[Character]) {
+    def printMap(grid: Grid, chars: Array[Character]) {
         val charMap = chars.map(ch => ch.pos -> ch.side).toMap
 
         println(
