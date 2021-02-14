@@ -64,8 +64,6 @@ class Day15Spec extends AnyFunSuite {
         assertResult(Day15.Point(4,3)) {
             elf.pos
         }
-
-        (0 until all.size).foreach(i => all(i) = all(i).move(all, map, graph))
     }
 
     test("Day 15: play example 1") {

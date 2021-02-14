@@ -80,8 +80,18 @@ object Day15 {
                 val usableGraph = allLocs.foldLeft(graph)(
                     (next, loc) => next.removeEdgesTo(loc))
 
-                val shortestPathsToCandidates = candidateLocs
-                    .flatMap(l => shortestPathsTo(Point(l._1, l._2), usableGraph))
+                val shortestPathsToCandidates = candidateLocs.scanLeft(
+                    (List[List[Point]](), Int.MaxValue)
+                )((next, loc) => {
+                    val (_, max) = next
+                    val paths = shortestPathsTo(
+                        Point(loc._1, loc._2), usableGraph, max)
+                    if (paths.isEmpty) (paths, max)
+                    else {
+                        val pathSize = paths.head.size
+                        if (pathSize < max) (paths, pathSize) else (paths, max)
+                    }
+                }).map(_._1).flatten
 
                 /*
                     If there are no paths to candidate points, this means that
@@ -110,7 +120,8 @@ object Day15 {
 
         def shortestPathsTo
             ( target: Point
-            , g: WeightedUndirectedGraph[Point])
+            , g: WeightedUndirectedGraph[Point]
+            , maxAllowed: Int)
             : List[List[Point]] = {
 
             val shortestPath =
@@ -119,6 +130,9 @@ object Day15 {
             if (!shortestPath.contains(pos)) return List[List[Point]]()
 
             val shortestPathLength = shortestPath.size
+
+            if (shortestPathLength > maxAllowed) return List[List[Point]]()
+
             val paths = ListBuffer[List[Point]]()
 
             def dfs
