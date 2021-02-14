@@ -6,7 +6,6 @@ import scalaadventutils.Grid
 import scalaadventutils.GridUtils
 import scalaadventutils.WeightedUndirectedGraph
 
-import collection.mutable.ArrayBuffer
 import collection.mutable.ListBuffer
 import collection.mutable.Set
 
@@ -24,12 +23,13 @@ object Day15 {
 
     def main(args: Array[String]) {
         val lines = Problem.parseInputToList("day15")
-        println(play(lines))
+        println(play(lines, 3))
+        println(Iterator.iterate(4)(play(lines, _)).dropWhile(_ == 0).next)
     }
 
     case class Character(pos: Point, side: Type.Value, hp: Int) {
 
-        def attack(allChars: Array[Character], g: Grid) = {
+        def attack(allChars: Array[Character], g: Grid, damage: Int) = {
             val targets = adjacentTargets(allChars, g).filter(_.hp > 0)
 
             if (targets.nonEmpty) {
@@ -38,11 +38,11 @@ object Day15 {
                     .sortBy(ch => (ch.pos.y, ch.pos.x))
                     .head
                 val index = allChars.indexWhere(ch => ch.pos == selected.pos)
-                allChars(index) = allChars(index).takeDamage
+                allChars(index) = allChars(index).takeDamage(damage)
             }
         }
 
-        def takeDamage = copy(hp = hp - 3)
+        def takeDamage(damage: Int) = copy(hp = hp - damage)
 
         def nextToTarget(allChars: Array[Character], g: Grid) =
             adjacentTargets(allChars, g).nonEmpty
@@ -125,7 +125,7 @@ object Day15 {
             : List[List[Point]] = {
 
             val shortestPath =
-                Dijkstra.shortestPath[Point](g, pos, target)
+                Dijkstra.shortestPath[Point](g, pos, target, false)
 
             if (!shortestPath.contains(pos)) return List[List[Point]]()
 
@@ -168,7 +168,7 @@ object Day15 {
             (if (side == Type.Goblin) "G" else "E") + "-" + pos.toString
     }
 
-    def play(lines: List[String]) = {
+    def play(lines: List[String], elfDamage: Int) = {
         val (map, goblins, elves) = parseInput(lines)
         val graph = new WeightedUndirectedGraph(constructGraph(map))
 
@@ -187,12 +187,16 @@ object Day15 {
                     return rounds * livingElves.map(_.hp).sum
 
                 all(i) = ch.move(all, map, graph)
-                ch.attack(all, map)
+
+                if (ch.side == Type.Elf) ch.attack(all, map, elfDamage)
+                else ch.attack(all, map, 3)
             })
 
             val alive = all.filter(_.hp > 0)
             val livingGoblins = filterSide(alive, Type.Goblin)
             val livingElves   = filterSide(alive, Type.Elf)
+
+            if (elfDamage > 3 && livingElves.size < elves.size) return 0
 
             turn(livingGoblins, livingElves, rounds + 1)
         }

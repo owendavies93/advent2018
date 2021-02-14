@@ -67,7 +67,7 @@ class Day15Spec extends AnyFunSuite {
     }
 
     test("Day 15: play example 1") {
-        Day15.play(l4)
+        Day15.play(l4, 3)
     }
 
     def readingOrder(l: List[Day15.Character]) =
