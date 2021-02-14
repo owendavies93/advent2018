@@ -9,6 +9,7 @@ class Day15Spec extends AnyFunSuite {
     val l1 = Problem.parseInputToList("day15-test1")
     val l2 = Problem.parseInputToList("day15-test2")
     val l3 = Problem.parseInputToList("day15-test3")
+    val l4 = Problem.parseInputToList("day15-test4")
 
     test("Day 15: Character.move example 1") {
         val (map, goblins, elves) = Day15.parseInput(l1)
@@ -65,6 +66,10 @@ class Day15Spec extends AnyFunSuite {
         }
 
         (0 until all.size).foreach(i => all(i) = all(i).move(all, map, graph))
+    }
+
+    test("Day 15: play example 1") {
+        Day15.play(l4)
     }
 
     def readingOrder(l: List[Day15.Character]) =

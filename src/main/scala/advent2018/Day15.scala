@@ -22,15 +22,39 @@ object Day15 {
         val Goblin, Elf = Value
     }
 
+    def main(args: Array[String]) {
+        val lines = Problem.parseInputToList("day15")
+        println(play(lines))
+    }
+
     case class Character(pos: Point, side: Type.Value, hp: Int) {
+
+        def attack(allChars: Array[Character], g: Grid) = {
+            val targets = adjacentTargets(allChars, g).filter(_.hp > 0)
+
+            if (targets.nonEmpty) {
+                val grouped  = targets.groupBy(_.hp)
+                val selected = grouped(grouped.keys.min)
+                    .sortBy(ch => (ch.pos.y, ch.pos.x))
+                    .head
+                val index = allChars.indexWhere(ch => ch.pos == selected.pos)
+                allChars(index) = allChars(index).takeDamage
+            }
+        }
+
+        def takeDamage = copy(hp = hp - 3)
+
         def nextToTarget(allChars: Array[Character], g: Grid) =
+            adjacentTargets(allChars, g).nonEmpty
+
+        private def adjacentTargets(allChars: Array[Character], g: Grid) =
             allChars
                 .filter(_.side != side)
                 .filter(t =>
                     g.nonDiagNeighbours(t.pos.x, t.pos.y, false)
                      .filter(p => Point(p._1, p._2) == pos)
                      .nonEmpty
-                ).nonEmpty
+                )
 
         def move
             ( allChars: Array[Character]
@@ -60,19 +84,27 @@ object Day15 {
                     .flatMap(l => shortestPathsTo(Point(l._1, l._2), usableGraph))
 
                 /*
-                    All edge weights are 1 so we just need the shortest path,
-                    not the shortest total weight (or rather, they are
-                    equivalent and the former is simpler)
+                    If there are no paths to candidate points, this means that
+                    all paths are blocked by walls or other characters, so we
+                    can't move
                 */
-                val groupedPaths  = shortestPathsToCandidates.groupBy(_.size)
-                val shortestPaths = groupedPaths(groupedPaths.keys.min)
+                if (shortestPathsToCandidates.isEmpty) this
+                else {
+                    /*
+                        All edge weights are 1 so we just need the shortes
+                        path, not the shortest total weight (or rather, they
+                        are equivalent and the former is simpler)
+                    */
+                    val groupedPaths  = shortestPathsToCandidates.groupBy(_.size)
+                    val shortestPaths = groupedPaths(groupedPaths.keys.min)
 
-                val chosen = shortestPaths
-                    .map(_.drop(1).head)
-                    .sortBy(p => (p.y, p.x))
-                    .head
+                    val chosen = shortestPaths
+                        .map(_.drop(1).head)
+                        .sortBy(p => (p.y, p.x))
+                        .head
 
-                copy(pos = chosen)
+                    copy(pos = chosen)
+                }
             }
         }
 
@@ -118,29 +150,44 @@ object Day15 {
             paths.toList
         }
 
-        // TODO: attack
-
         override def toString() =
             (if (side == Type.Goblin) "G" else "E") + "-" + pos.toString
     }
 
-    def play(lines: List[String]) {
+    def play(lines: List[String]) = {
         val (map, goblins, elves) = parseInput(lines)
         val graph = new WeightedUndirectedGraph(constructGraph(map))
 
-        def turn(gs: List[Character], es: List[Character], rounds: Int): Int = {
-            if (gs.size == 0)
-                return rounds * es.map(_.hp).sum
-            else if (es.size == 0)
-                return rounds * gs.map(_.hp).sum
-
+        def turn(gs: Array[Character], es: Array[Character], rounds: Int): Int = {
             val all = (gs ++ es).sortBy(ch => (ch.pos.y, ch.pos.x))
 
-            // TODO: game loop
+            (0 until all.size).foreach(i => {
+                val ch = all(i)
 
-            0
+                val livingElves = filterSide(all, Type.Elf).filter(_.hp > 0)
+                val livingGoblins = filterSide(all, Type.Goblin).filter(_.hp > 0)
+
+                if (ch.side == Type.Goblin && livingElves.isEmpty)
+                    return rounds * livingGoblins.map(_.hp).sum
+                else if (ch.side == Type.Elf && livingGoblins.isEmpty)
+                    return rounds * livingElves.map(_.hp).sum
+
+                all(i) = ch.move(all, map, graph)
+                ch.attack(all, map)
+            })
+
+            val alive = all.filter(_.hp > 0)
+            val livingGoblins = filterSide(alive, Type.Goblin)
+            val livingElves   = filterSide(alive, Type.Elf)
+
+            turn(livingGoblins, livingElves, rounds + 1)
         }
+
+        turn(goblins.toArray, elves.toArray, 0)
     }
+
+    private def filterSide(chars: Array[Character], side: Type.Value) =
+        chars.filter(_.side == side)
 
     def constructGraph(grid: Grid) =
         (0 until grid.height).flatMap(y => {
