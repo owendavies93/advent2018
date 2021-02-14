@@ -11,3 +11,5 @@ Run `sbt test` to run the tests, after installing
 TODO:
 
 * [ ] Improve immutability of Day 8
+* [ ] Improve performance of Day 15
+* [ ] Improve immutability of Day 15
