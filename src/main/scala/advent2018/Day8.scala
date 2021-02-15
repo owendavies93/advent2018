@@ -20,16 +20,16 @@ object Day8 {
         q ++= vals
 
         def find_ : Int = {
-            val ch = q.dequeue
-            val me = q.dequeue
+            val ch = q.dequeue()
+            val me = q.dequeue()
 
             if (ch == 0)
-                (1 to me).map(_ => q.dequeue).sum
+                (1 to me).map(_ => q.dequeue()).sum
             else {
                 val children = (1 to ch).map(_ => find_).toArray
                 var total = 0
                 (1 to me).foreach(_ => {
-                    val md = q.dequeue
+                    val md = q.dequeue()
                     if (md <= children.size)
                         total += children(md - 1)
                 })
@@ -45,12 +45,12 @@ object Day8 {
         var q = Queue[Int]()
         q ++= vals
 
-        def sum_ {
-            val ch = q.dequeue
-            val me = q.dequeue
+        def sum_ : Unit = {
+            val ch = q.dequeue()
+            val me = q.dequeue()
 
             (1 to ch).foreach(_ => sum_)
-            (1 to me).foreach(_ => total += q.dequeue)
+            (1 to me).foreach(_ => total += q.dequeue())
         }
 
         sum_

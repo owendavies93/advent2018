@@ -24,7 +24,7 @@ object Day15 {
     def main(args: Array[String]) {
         val lines = Problem.parseInputToList("day15")
         println(play(lines, 3))
-        println(Iterator.iterate(4)(play(lines, _)).dropWhile(_ == 0).next)
+        println(Iterator.iterate(4)(play(lines, _)).dropWhile(_ == 0).next())
     }
 
     case class Character(pos: Point, side: Type.Value, hp: Int) {
@@ -125,7 +125,7 @@ object Day15 {
             : List[List[Point]] = {
 
             val shortestPath =
-                Dijkstra.shortestPath[Point](g, pos, target, false)
+                Dijkstra.shortestPath[Point](g, pos, target)
 
             if (!shortestPath.contains(pos)) return List[List[Point]]()
 
@@ -138,7 +138,7 @@ object Day15 {
             def dfs
                 ( point: Point
                 , path: ListBuffer[Point]
-                , visited: Set[Point]) {
+                , visited: Set[Point]): Unit = {
 
                 if (path.size > shortestPathLength) return
 
@@ -242,7 +242,7 @@ object Day15 {
         (grid, goblins, elves)
     }
 
-    def printMap(grid: Grid, chars: Array[Character]) {
+    def printMap(grid: Grid, chars: Array[Character]): Unit = {
         val charMap = chars.map(ch => ch.pos -> ch.side).toMap
 
         println(

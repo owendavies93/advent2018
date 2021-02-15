@@ -49,11 +49,12 @@ object Day4 {
                                          .toString.split("#")(1).toInt
                         parse(durs, id, r)
                     }
+                case _ => durs
             }
 
         val durations = parse(List[(Int, Duration)](), 0, lines)
 
-        durations.groupBy(_._1.toInt).mapValues(_.map(_._2))
+        durations.groupBy(_._1.toInt).view.mapValues(_.map(_._2))
                  .map(d => Guard(d._1, d._2))
     }
 

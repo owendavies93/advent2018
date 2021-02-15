@@ -23,7 +23,7 @@ object Day6 {
             (minX to maxX).map(x =>
                 Point(x, y) -> Point(x, y).nearest(points))).toMap
             .filterNot(_._2 == None)
-            .mapValues(_.get)
+            .view.mapValues(_.get)
 
         val edgePoints = nearest.filterKeys(p =>
             p.x == minX || p.x == maxX || p.y == minY || p.y == maxY

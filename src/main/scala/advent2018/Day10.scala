@@ -13,7 +13,7 @@ object Day10 {
         step(25000, lines)
     }
 
-    def step(times: Int, lines: List[String]) {
+    def step(times: Int, lines: List[String]): Unit = {
         val ps = parseInput(lines)
 
         val bounds = (0 until times).scanLeft((ps, Int.MaxValue))(
@@ -31,7 +31,7 @@ object Day10 {
         println(smallest._2)
     }
 
-    def draw(ps: List[Point]) {
+    def draw(ps: List[Point]): Unit = {
         val xs = ps.map(_.x)
         val ys = ps.map(_.y)
         val pm = ps.map(p => (p.x, p.y) -> 1).toMap

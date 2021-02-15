@@ -13,7 +13,7 @@ object Day1 {
     def part1(lines: List[String]) = lines.map(_.toInt).sum
 
     def part2(lines: List[String]) = {
-        val freqs = Stream.continually(lines.map(_.toInt).toStream).flatten
+        val freqs = LazyList.continually(lines.map(_.toInt)).flatten
 
         def findDupe(seen: Set[Int], i: Int, total: Int): Int =
             if (seen.contains(total)) total
