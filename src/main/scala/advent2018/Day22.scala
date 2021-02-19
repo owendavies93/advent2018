@@ -98,26 +98,24 @@ object Day22 {
                 val regionType = c(p)
 
                 regionType.usable.map(e => {
-                    // TODO: remove ugly mutability here
-                    val edges = collection.mutable.Map[(Point, Equipment), Int]()
-
-                    (regionType, e) match {
-                        case (Rocky, Torch)    => edges += (p, Climbing) -> 7
-                        case (Rocky, Climbing) => edges += (p, Torch)    -> 7
-                        case (Wet, None)       => edges += (p, Climbing) -> 7
-                        case (Wet, Climbing)   => edges += (p, None)     -> 7
-                        case (Narrow, None)    => edges += (p, Torch)    -> 7
-                        case (Narrow, Torch)   => edges += (p, None)     -> 7
-                        case _ =>
+                    val tran = (regionType, e) match {
+                        case (Rocky, Torch)    => (p, Climbing)
+                        case (Rocky, Climbing) => (p, Torch)
+                        case (Wet, None)       => (p, Climbing)
+                        case (Wet, Climbing)   => (p, None)
+                        case (Narrow, None)    => (p, Torch)
+                        case (Narrow, Torch)   => (p, None)
+                        case _                 => (p, e)
                     }
 
                     val neighbours = nonDiagNeighbours(p, maxx, maxy)
-                    neighbours.map(n => {
-                        val nRegionType = c(n)
-                        if (nRegionType.usable.contains(e))
-                            edges += (n, e) -> 1
-                    })
-                    (p, e) -> edges.toMap
+
+                    val edges = neighbours.map(n => (n, c(n)))
+                                          .filter(_._2.usable.contains(e))
+                                          .map(n => (n._1, e) -> 1)
+                                          .toMap
+
+                    (p, e) -> edges.updated(tran, 7)
                 })
             })
         ).flatten.toMap
