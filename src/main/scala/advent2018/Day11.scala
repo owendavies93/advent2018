@@ -1,7 +1,5 @@
 package advent2018
 
-import scalaadventutils.Profiler.timeMS
-
 import collection.mutable.ArrayBuffer
 
 object Day11 {

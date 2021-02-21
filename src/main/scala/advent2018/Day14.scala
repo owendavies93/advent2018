@@ -1,7 +1,5 @@
 package advent2018
 
-import scalaadventutils.Profiler.timeMicS
-
 object Day14 {
 
     def main(args: Array[String]) {
@@ -17,23 +15,14 @@ object Day14 {
     def recipeCount(target: String) = {
         val targetList = target.toList.map(_.toInt - 48)
         val result = runner.dropWhile(n => {
-            if (n._3.size % 1000 == 0) {
-                timeMicS { !n._3.containsSlice(targetList) }
-            } else {
-                !n._3.containsSlice(targetList)
-            }
+            !n._3.containsSlice(targetList)
         }).take(1)
         result.toList.head._3.mkString.indexOf(target)
     }
 
     private def runner = Iterator.iterate((0, 1, Array(3,7)))(next => {
         val (first, second, recipes) = next
-        if (recipes.size % 1000 == 0) {
-            println(recipes.size)
-            timeMicS { step(first, second, recipes) }
-        } else {
-            step(first, second, recipes)
-        }
+        step(first, second, recipes)
     })
 
     def step(first: Int, second: Int, recipes: Array[Int]) = {
